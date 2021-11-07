@@ -20,14 +20,20 @@ struct OurData {
 }
 fn main() {
     let before = std::time::Instant::now();
-    let sms_len = {let storage = Path::new("storage");
+    let storage = Path::new("storage");
+    let config = Configuration{
+        sync_writes:false,
+        block_writes:false,
+        storage_path:None
+    };
+    let sms_len = {
         std::fs::create_dir_all(storage).unwrap();
-        let sms_db = SansDB::<SmsCommand,OurData>::restore(OurData::default(),storage,|command,data|{
+        let sms_db = SansDB::<SmsCommand,OurData>::restore(OurData::default(),|command,data|{
             match command {
                 SmsCommand::Add { message } => data.sms.push(message.clone()),
                 SmsCommand::Yeet =>{ data.sms.pop();},
             }
-        });
+        },config);
         let arc_db = Arc::new(sms_db);
         let capacity = 10000;   
         let mut handles = Vec::with_capacity(capacity);
